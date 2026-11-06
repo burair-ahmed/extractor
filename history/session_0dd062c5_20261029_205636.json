@@ -1,0 +1,15 @@
+[
+  {
+    "target_url": "https://example.com",
+    "primary_email": "",
+    "all_emails": "None",
+    "all_emails_list": [],
+    "email_sources": {},
+    "pages_scanned": 1,
+    "status": "No Email Found",
+    "visited_pages": [
+      "https://example.com"
+    ],
+    "error_message": ""
+  }
+]

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Extractor Pro - Deep Contact Harvester</title>
+  <meta name="description" content="High-precision web email extraction robot. Crawls multi-page websites, penetrates contact forms and mailto links, and exports clean spreadsheets to Excel.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <!-- Ambient background glow elements -->
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <!-- ═══ Column Picker Modal ═══ -->
+  <div class="modal-overlay" id="col-picker-overlay" aria-hidden="true">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-header">
+        <div class="modal-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+        </div>
+        <div>
+          <h3 id="modal-title">Select URL Column</h3>
+          <p class="modal-subtitle" id="modal-file-info">Choose which column contains website URLs</p>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-hint" id="modal-hint-text"></p>
+        <div class="col-list" id="col-list"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" id="modal-cancel-btn" class="btn btn-secondary">Cancel</button>
+        <button type="button" id="modal-confirm-btn" class="btn btn-primary" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          Use Selected Column
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand-section">
+        <div class="logo-badge">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="20" height="16" x="2" y="4" rx="3"></rect>
+            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">Email Extractor <span>Pro</span></h1>
+          <p class="brand-subtitle">Deep Multi-Page Website Contact Harvester &bull; Form &amp; Mailto Scanner</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <button type="button" id="btn-toggle-history" class="btn btn-history-toggle" title="View extraction history">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="12 8 12 12 14 14"></polyline>
+            <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5V15h5"></path>
+          </svg>
+          <span>History</span>
+          <span class="history-count-badge" id="history-count-badge" style="display:none">0</span>
+        </button>
+        <div class="header-status">
+          <span class="status-indicator live"></span>
+          <span class="status-label">Bot Ready</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- History Panel -->
+    <section class="history-panel card" id="history-panel" style="display:none">
+      <div class="history-panel-header">
+        <div class="card-header" style="margin-bottom:0">
+          <div class="header-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="12 8 12 12 14 14"></polyline>
+              <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5V15h5"></path>
+            </svg>
+          </div>
+          <h2>Extraction History</h2>
+        </div>
+        <button type="button" id="btn-close-history" class="text-btn" style="font-size:13px;">✕ Close</button>
+      </div>
+      <div class="history-list" id="history-list">
+        <div class="history-empty">No saved sessions yet. Complete an extraction to see it here.</div>
+      </div>
+    </section>
+
+    <!-- Main Grid Layout -->
+    <main class="main-grid">
+      <!-- Left Panel: Input & Settings -->
+      <section class="card input-card">
+        <div class="card-header">
+          <div class="header-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+          </div>
+          <h2>Target Websites</h2>
+        </div>
+
+        <form id="extraction-form">
+          <!-- Textarea for URLs -->
+          <div class="form-group">
+            <div class="label-row">
+              <label for="urls-input">Website URLs (One per line)</label>
+              <button type="button" id="btn-load-sample" class="text-btn">Load Demo URLs</button>
+            </div>
+            <textarea 
+              id="urls-input" 
+              name="urls_text" 
+              placeholder="https://example.com&#10;https://company.org&#10;domain.io" 
+              rows="6"
+            ></textarea>
+          </div>
+
+          <!-- File Upload Zone -->
+          <div class="form-group">
+            <label>Or Upload File (.txt, .csv, .xlsx, .xls)</label>
+            <div class="drop-zone" id="drop-zone">
+              <input type="file" id="file-input" name="file" accept=".txt,.csv,.xlsx,.xls" hidden>
+              <!-- Hidden field to carry selected column name -->
+              <input type="hidden" id="url-column-input" name="url_column" value="">
+              <div class="drop-zone-content">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <p id="drop-zone-label"><span class="highlight">Click to browse</span> or drag &amp; drop list file</p>
+                <span class="file-hint">Supported: TXT, CSV, XLS, or Excel (.xlsx)</span>
+              </div>
+            </div>
+            <!-- Selected column indicator -->
+            <div class="col-selected-indicator" id="col-selected-indicator" style="display:none">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              URL Column: <strong id="col-selected-name"></strong>
+              <button type="button" id="btn-reselect-col" class="text-btn" style="margin-left:8px">Change</button>
+            </div>
+          </div>
+
+          <!-- Crawl Depth & Concurrency Config -->
+          <div class="settings-grid">
+            <div class="setting-item">
+              <label for="max-pages-input">
+                Max Pages / Site
+                <span class="tooltip" title="How many internal pages the bot traverses per domain (Contact, About, Team, etc.)">?</span>
+              </label>
+              <div class="input-slider-wrap">
+                <input type="number" id="max-pages-input" name="max_pages" min="1" max="100" value="25">
+              </div>
+            </div>
+
+            <div class="setting-item">
+              <label for="concurrency-input">
+                Parallel Workers
+                <span class="tooltip" title="How many websites to crawl concurrently">?</span>
+              </label>
+              <div class="input-slider-wrap">
+                <input type="number" id="concurrency-input" name="concurrency" min="1" max="10" value="4">
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="button-group">
+            <button type="submit" id="btn-start" class="btn btn-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>Start Extraction</span>
+            </button>
+            <button type="button" id="btn-cancel" class="btn btn-danger" style="display: none;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              </svg>
+              <span>Stop Crawl</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Right Panel: Live Stats & Real-Time Monitor -->
+      <section class="card monitor-card">
+        <div class="card-header">
+          <div class="header-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+          </div>
+          <h2>Live Extraction Analytics</h2>
+        </div>
+
+        <!-- Metrics Cards -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-title">Emails Discovered</div>
+            <div class="metric-value accent-green" id="stat-emails">0</div>
+            <div class="metric-sub">Primary &amp; Additional</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-title">Sites Processed</div>
+            <div class="metric-value" id="stat-sites">0 / 0</div>
+            <div class="metric-sub" id="stat-sites-percent">0% Completed</div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-title">Pages Scanned</div>
+            <div class="metric-value accent-cyan" id="stat-pages">0</div>
+            <div class="metric-sub">Internal DOM pages</div>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-section">
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div>
+          </div>
+          <div class="progress-status-text" id="progress-status-text">Ready for your URL list...</div>
+        </div>
+
+        <!-- Real-time Live Log Feed -->
+        <div class="terminal-container">
+          <div class="terminal-bar">
+            <div class="terminal-dots">
+              <span></span><span></span><span></span>
+            </div>
+            <div class="terminal-title">Active Spider Console</div>
+            <button type="button" id="btn-clear-log" class="terminal-clear">Clear</button>
+          </div>
+          <div class="terminal-body" id="log-feed">
+            <div class="log-entry info">[SYSTEM] Extractor initialized and awaiting targets.</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Results Section -->
+    <section class="card results-card" id="results-section">
+      <div class="results-header">
+        <div class="results-title-group">
+          <h2>Discovered Contact Directory</h2>
+          <span class="badge" id="results-count-badge">0 Results</span>
+        </div>
+
+        <div class="results-actions">
+          <div class="search-wrap">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="search-results-input" placeholder="Filter by email or domain...">
+          </div>
+
+          <button type="button" id="btn-export-excel" class="btn btn-export" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Excel (.xlsx)</span>
+          </button>
+
+          <button type="button" id="btn-export-xls" class="btn btn-secondary" disabled>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Legacy (.xls)</span>
+          </button>
+
+          <button type="button" id="btn-export-csv" class="btn btn-secondary" disabled>
+            <span>Export CSV</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Table Container -->
+      <div class="table-container">
+        <table class="data-table" id="results-table">
+          <thead>
+            <tr>
+              <th>Website URL</th>
+              <th>Primary Contact Email</th>
+              <th>All Discovered Emails</th>
+              <th>Pages Scanned</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="results-tbody">
+            <tr class="empty-row">
+              <td colspan="6">No websites crawled yet. Add URLs above and click "Start Extraction".</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Email Extractor Pro &bull; Deep Heuristic Scanner &bull; Domain-Bounded Crawler</p>
+    </footer>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
