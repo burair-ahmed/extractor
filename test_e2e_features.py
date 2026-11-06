@@ -8,7 +8,10 @@ import pandas as pd
 import openpyxl
 import xlwt
 
-BASE_URL = "http://127.0.0.1:8000"
+from fastapi.testclient import TestClient
+from app import app
+
+client = TestClient(app)
 
 def create_sample_xlsx():
     df = pd.DataFrame({
@@ -41,7 +44,7 @@ def create_sample_xls():
     return buf.getvalue()
 
 def run_tests():
-    client = httpx.Client(base_url=BASE_URL, timeout=30.0)
+    # Uses TestClient(app) defined at module level
 
     print("1. Testing /api/inspect-file with .xlsx...")
     xlsx_bytes = create_sample_xlsx()

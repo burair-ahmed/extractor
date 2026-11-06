@@ -269,3 +269,267 @@ def export_results_to_xls(results: List[Dict[str, Any]]) -> bytes:
     wb.save(buf)
     return buf.getvalue()
 
+
+def export_gmb_to_excel(results: List[Dict[str, Any]]) -> bytes:
+    """
+    Creates an Excel (.xlsx) workbook for Google My Business / Google Maps leads.
+    Includes business name, category, phone, verified emails, website, full address,
+    rating, reviews, operating status, Google Maps link, and clickable URLs.
+    """
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "GMB Leads"
+
+    ws.views.sheetView[0].showGridLines = True
+
+    # Google Maps emerald-slate theme header
+    header_fill = PatternFill(start_color="0F5132", end_color="0F5132", fill_type="solid")
+    header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+    header_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    thin_border = Border(
+        left=Side(style="thin", color="CBD5E1"),
+        right=Side(style="thin", color="CBD5E1"),
+        top=Side(style="thin", color="CBD5E1"),
+        bottom=Side(style="thin", color="CBD5E1"),
+    )
+
+    headers = [
+        "Business Name",
+        "Category / Niche",
+        "Phone Number",
+        "Primary Email",
+        "All Discovered Emails",
+        "Website",
+        "Full Address",
+        "Rating ⭐",
+        "Reviews",
+        "Operating Status",
+        "Google Maps Link"
+    ]
+
+    ws.append(headers)
+    ws.row_dimensions[1].height = 28
+
+    for col_idx in range(1, len(headers) + 1):
+        cell = ws.cell(row=1, column=col_idx)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = header_align
+        cell.border = thin_border
+
+    zebra_fill = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+    white_fill = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
+    data_font = Font(name="Calibri", size=10)
+    name_font = Font(name="Calibri", size=10, bold=True, color="0F172A")
+    email_font = Font(name="Calibri", size=10, bold=True, color="047857")
+    link_font = Font(name="Calibri", size=10, color="2563EB", underline="single")
+    rating_fill = PatternFill(start_color="FEF3C7", end_color="FEF3C7", fill_type="solid")
+
+    for row_idx, r in enumerate(results, start=2):
+        ws.row_dimensions[row_idx].height = 22
+
+        all_emails_str = r.get("all_emails", "")
+        if isinstance(all_emails_str, list):
+            all_emails_str = ", ".join(all_emails_str)
+
+        row_data = [
+            r.get("business_name", "") or r.get("name", ""),
+            r.get("category", "") or r.get("niche", ""),
+            r.get("phone", "") or r.get("phone_number", ""),
+            r.get("primary_email", "") or "",
+            all_emails_str or "",
+            r.get("website", "") or "",
+            r.get("address", "") or r.get("full_address", ""),
+            r.get("rating", "") or "",
+            r.get("reviews_count", r.get("reviews", "")),
+            r.get("operating_status", r.get("hours", "")),
+            r.get("maps_url", r.get("google_maps_url", ""))
+        ]
+        ws.append(row_data)
+
+        row_fill = zebra_fill if row_idx % 2 == 0 else white_fill
+
+        for col_idx in range(1, len(row_data) + 1):
+            cell = ws.cell(row=row_idx, column=col_idx)
+            cell.border = thin_border
+            cell.fill = row_fill
+            cell.font = data_font
+
+            # Col 1: Business name
+            if col_idx == 1:
+                cell.font = name_font
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+            # Col 3: Phone
+            elif col_idx == 3:
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+            # Col 4: Primary Email
+            elif col_idx == 4:
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+                if cell.value:
+                    cell.font = email_font
+            # Col 6: Website (Hyperlink)
+            elif col_idx == 6:
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+                if cell.value and str(cell.value).startswith("http"):
+                    cell.hyperlink = str(cell.value)
+                    cell.font = link_font
+            # Col 7: Address
+            elif col_idx == 7:
+                cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+            # Col 8: Rating
+            elif col_idx == 8:
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+                if cell.value:
+                    try:
+                        val = float(str(cell.value).replace("★", "").strip())
+                        if val >= 4.5:
+                            cell.fill = rating_fill
+                    except Exception:
+                        pass
+            # Col 9: Reviews
+            elif col_idx == 9:
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+            # Col 11: Maps link
+            elif col_idx == 11:
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+                if cell.value and str(cell.value).startswith("http"):
+                    cell.hyperlink = str(cell.value)
+                    cell.font = link_font
+            else:
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+
+    for col in ws.columns:
+        max_len = 0
+        col_letter = get_column_letter(col[0].column)
+        for cell in col:
+            val_str = str(cell.value or "")
+            lines = val_str.split("\n")
+            line_max = max(len(l) for l in lines) if lines else 0
+            if line_max > max_len:
+                max_len = line_max
+        adjusted_width = min(max(max_len + 4, 12), 50)
+        ws.column_dimensions[col_letter].width = adjusted_width
+
+    ws.freeze_panes = "A2"
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output.getvalue()
+
+
+def export_gmb_to_csv(results: List[Dict[str, Any]]) -> str:
+    """Exports GMB extracted results to CSV string."""
+    flat_data = []
+    for r in results:
+        all_emails_str = r.get("all_emails", "")
+        if isinstance(all_emails_str, list):
+            all_emails_str = ", ".join(all_emails_str)
+
+        flat_data.append({
+            "Business Name": r.get("business_name", "") or r.get("name", ""),
+            "Category": r.get("category", "") or r.get("niche", ""),
+            "Phone Number": r.get("phone", "") or r.get("phone_number", ""),
+            "Primary Email": r.get("primary_email", "") or "",
+            "All Discovered Emails": all_emails_str or "",
+            "Website": r.get("website", "") or "",
+            "Full Address": r.get("address", "") or r.get("full_address", ""),
+            "Rating": r.get("rating", "") or "",
+            "Reviews": r.get("reviews_count", r.get("reviews", "")),
+            "Operating Status": r.get("operating_status", r.get("hours", "")),
+            "Google Maps Link": r.get("maps_url", r.get("google_maps_url", ""))
+        })
+
+    df = pd.DataFrame(flat_data)
+    return df.to_csv(index=False)
+
+
+def export_gmb_to_xls(results: List[Dict[str, Any]]) -> bytes:
+    """Exports GMB extracted results to legacy .xls workbook."""
+    import xlwt
+
+    wb = xlwt.Workbook(encoding="utf-8")
+    ws = wb.add_sheet("GMB Leads")
+
+    header_font = xlwt.Font()
+    header_font.name = "Arial"
+    header_font.bold = True
+    header_font.color_index = xlwt.Style.colour_map["white"]
+
+    header_pattern = xlwt.Pattern()
+    header_pattern.pattern = xlwt.Pattern.SOLID_PATTERN
+    header_pattern.pattern_fore_colour = xlwt.Style.colour_map["dark_green"]
+
+    header_align = xlwt.Alignment()
+    header_align.horz = xlwt.Alignment.HORZ_CENTER
+    header_align.vert = xlwt.Alignment.VERT_CENTER
+    header_align.wrap = xlwt.Alignment.WRAP_AT_RIGHT
+
+    header_style = xlwt.XFStyle()
+    header_style.font = header_font
+    header_style.pattern = header_pattern
+    header_style.alignment = header_align
+
+    item_font = xlwt.Font()
+    item_font.name = "Arial"
+    item_font.height = 200
+
+    item_align = xlwt.Alignment()
+    item_align.vert = xlwt.Alignment.VERT_CENTER
+    item_align.wrap = xlwt.Alignment.WRAP_AT_RIGHT
+
+    item_style = xlwt.XFStyle()
+    item_style.font = item_font
+    item_style.alignment = item_align
+
+    headers = [
+        "Business Name",
+        "Category / Niche",
+        "Phone Number",
+        "Primary Email",
+        "All Discovered Emails",
+        "Website",
+        "Full Address",
+        "Rating",
+        "Reviews",
+        "Operating Status",
+        "Google Maps Link"
+    ]
+
+    for col_idx, h in enumerate(headers):
+        ws.write(0, col_idx, h, header_style)
+
+    col_widths = [len(h) for h in headers]
+
+    for row_idx, r in enumerate(results, start=1):
+        all_emails_str = r.get("all_emails", "")
+        if isinstance(all_emails_str, list):
+            all_emails_str = ", ".join(all_emails_str)
+
+        row_vals = [
+            str(r.get("business_name", "") or r.get("name", "")),
+            str(r.get("category", "") or r.get("niche", "")),
+            str(r.get("phone", "") or r.get("phone_number", "")),
+            str(r.get("primary_email", "") or ""),
+            str(all_emails_str or ""),
+            str(r.get("website", "") or ""),
+            str(r.get("address", "") or r.get("full_address", "")),
+            str(r.get("rating", "") or ""),
+            str(r.get("reviews_count", r.get("reviews", ""))),
+            str(r.get("operating_status", r.get("hours", ""))),
+            str(r.get("maps_url", r.get("google_maps_url", "")))
+        ]
+
+        for col_idx, val in enumerate(row_vals):
+            ws.write(row_idx, col_idx, val, item_style)
+            col_widths[col_idx] = max(col_widths[col_idx], min(len(val), 45))
+
+    for col_idx, w in enumerate(col_widths):
+        ws.col(col_idx).width = min(max((w + 4) * 256, 3500), 12000)
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+

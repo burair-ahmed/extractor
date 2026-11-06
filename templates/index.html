@@ -3,320 +3,630 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Email Extractor Pro - Deep Contact Harvester</title>
-  <meta name="description" content="High-precision web email extraction robot. Crawls multi-page websites, penetrates contact forms and mailto links, and exports clean spreadsheets to Excel.">
+  <title>SYS_CORE v4.9.2 // PROTOCOL_DISPATCHER &bull; TERMINAL CONSOLE</title>
+  <meta name="description" content="Kernel-level geo-spatial telemetry, node resolver, and multi-thread stream analyzer.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css">
 </head>
-<body>
-  <!-- Ambient background glow elements -->
-  <div class="bg-glow glow-1"></div>
-  <div class="bg-glow glow-2"></div>
+<body class="crt-screen">
+  <!-- Subtle CRT Scanline and Vignette Overlays -->
+  <div class="crt-scanlines" aria-hidden="true"></div>
+  <div class="crt-vignette" aria-hidden="true"></div>
 
-  <!-- ═══ Column Picker Modal ═══ -->
+  <!-- ═══ Column Picker Terminal Dialog ═══ -->
   <div class="modal-overlay" id="col-picker-overlay" aria-hidden="true">
-    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div class="modal-header">
-        <div class="modal-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect>
-            <rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
-          </svg>
+    <div class="terminal-window modal-window" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="term-titlebar">
+        <div class="term-title-left">
+          <span class="term-dot dot-red"></span>
+          <span class="term-dot dot-yellow"></span>
+          <span class="term-dot dot-green"></span>
+          <span class="term-path">dialog://dataframe_column_inspector</span>
         </div>
-        <div>
-          <h3 id="modal-title">Select URL Column</h3>
-          <p class="modal-subtitle" id="modal-file-info">Choose which column contains website URLs</p>
+        <div class="term-title-right">
+          <span class="term-tag">[STREAM_CFG]</span>
         </div>
       </div>
 
-      <div class="modal-body">
-        <p class="modal-hint" id="modal-hint-text"></p>
-        <div class="col-list" id="col-list"></div>
-      </div>
+      <div class="term-window-body modal-inner">
+        <div class="modal-header-block">
+          <div class="term-prompt-line">
+            <span class="prompt-user">root@core</span><span class="prompt-sep">:</span><span class="prompt-path">~/inspect_file</span><span class="prompt-char">$</span>
+            <span class="prompt-cmd" id="modal-title">SELECT_DATAFRAME_VECTOR_KEY</span>
+          </div>
+          <p class="term-dim-sub" id="modal-file-info">[INPUT_FILE: ANALYZING_CHUNKS...]</p>
+        </div>
 
-      <div class="modal-footer">
-        <button type="button" id="modal-cancel-btn" class="btn btn-secondary">Cancel</button>
-        <button type="button" id="modal-confirm-btn" class="btn btn-primary" disabled>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-          Use Selected Column
-        </button>
+        <div class="modal-body-block">
+          <p class="term-hint" id="modal-hint-text">> Assign target URL column from payload:</p>
+          <div class="col-list" id="col-list"></div>
+        </div>
+
+        <div class="term-action-bar modal-footer-bar">
+          <button type="button" id="modal-cancel-btn" class="term-btn term-btn-dim">[ ABORT / CANCEL ]</button>
+          <button type="button" id="modal-confirm-btn" class="term-btn term-btn-primary" disabled>
+            [ >_ COMMIT_COLUMN_BINDING ]
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="app-container">
-    <!-- Header -->
-    <header class="app-header">
-      <div class="brand-section">
-        <div class="logo-badge">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <rect width="20" height="16" x="2" y="4" rx="3"></rect>
-            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-          </svg>
+  <div class="app-terminal-root">
+
+    <!-- ═══ TOP STATUS & TELEMETRY HEADER BAR ═══ -->
+    <header class="term-top-bar">
+      <div class="term-top-left">
+        <div class="term-sys-icon">
+          <span class="term-pulse-ring"></span>
+          <span class="term-icon-glyph">⬢</span>
         </div>
-        <div>
-          <h1 class="brand-title">Email Extractor <span>Pro</span></h1>
-          <p class="brand-subtitle">Deep Multi-Page Website Contact Harvester &bull; Form &amp; Mailto Scanner</p>
+        <div class="term-brand">
+          <div class="term-brand-title">
+            <span class="term-accent-cyan">SYS_CORE</span>::<span class="term-accent-green">PROTOCOL_DISPATCHER</span>
+            <span class="term-version-chip">v4.9.2-REL</span>
+          </div>
+          <div class="term-brand-sub">
+            KERNEL LEVEL GEO-TELEMETRY &bull; MULTI-THREAD STREAM PARSER &bull; IDENTITY RECON
+          </div>
         </div>
       </div>
-      <div class="header-right">
-        <button type="button" id="btn-toggle-history" class="btn btn-history-toggle" title="View extraction history">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="12 8 12 12 14 14"></polyline>
-            <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5V15h5"></path>
-          </svg>
-          <span>History</span>
-          <span class="history-count-badge" id="history-count-badge" style="display:none">0</span>
+
+      <div class="term-top-center">
+        <div class="term-telemetry-badge">
+          <span class="telemetry-label">PID</span><span class="telemetry-val">49120</span>
+        </div>
+        <div class="term-telemetry-badge">
+          <span class="telemetry-label">TTY</span><span class="telemetry-val">pts/0</span>
+        </div>
+        <div class="term-telemetry-badge">
+          <span class="telemetry-label">PORT</span><span class="telemetry-val">8000</span>
+        </div>
+        <div class="term-telemetry-badge">
+          <span class="telemetry-label">ENC</span><span class="telemetry-val">UTF-8/GZIP</span>
+        </div>
+      </div>
+
+      <div class="term-top-right">
+        <button type="button" id="btn-toggle-search-history" class="term-btn term-btn-nav" title="View persistent search history & extracted counts">
+          <span class="btn-bracket">[</span>
+          <span class="btn-icon">🔍</span>
+          <span class="btn-text">SEARCH_LOG</span>
+          <span class="history-count-badge" id="search-history-count-badge" style="display:none">0</span>
+          <span class="btn-bracket">]</span>
         </button>
-        <div class="header-status">
+
+        <button type="button" id="btn-toggle-history" class="term-btn term-btn-nav" title="View persistent session archive">
+          <span class="btn-bracket">[</span>
+          <span class="btn-icon">📁</span>
+          <span class="btn-text">SYS_ARCHIVE</span>
+          <span class="history-count-badge" id="history-count-badge" style="display:none">0</span>
+          <span class="btn-bracket">]</span>
+        </button>
+
+        <div class="term-status-box">
           <span class="status-indicator live"></span>
-          <span class="status-label">Bot Ready</span>
+          <span class="status-label">DAEMON_ONLINE</span>
         </div>
       </div>
     </header>
 
-    <!-- History Panel -->
-    <section class="history-panel card" id="history-panel" style="display:none">
-      <div class="history-panel-header">
-        <div class="card-header" style="margin-bottom:0">
-          <div class="header-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="12 8 12 12 14 14"></polyline>
-              <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5V15h5"></path>
-            </svg>
-          </div>
-          <h2>Extraction History</h2>
+    <!-- ═══ SEARCH HISTORY LOG SLIDE DRAWER ═══ -->
+    <section class="terminal-window history-window" id="search-history-panel" style="display:none">
+      <div class="term-titlebar">
+        <div class="term-title-left">
+          <span class="term-dot dot-red"></span>
+          <span class="term-dot dot-yellow"></span>
+          <span class="term-dot dot-green"></span>
+          <span class="term-path">history://var/log/search_history.json</span>
         </div>
-        <button type="button" id="btn-close-history" class="text-btn" style="font-size:13px;">✕ Close</button>
+        <div class="term-title-right">
+          <span class="term-tag">[PERSISTENT_SEARCH_AUDIT]</span>
+          <button type="button" id="btn-clear-search-history" class="term-title-btn" title="Purge all search history">[ PURGE_ALL ]</button>
+          <button type="button" id="btn-close-search-history" class="term-title-btn" title="Close">[ ✕ ]</button>
+        </div>
       </div>
-      <div class="history-list" id="history-list">
-        <div class="history-empty">No saved sessions yet. Complete an extraction to see it here.</div>
+      <div class="term-window-body">
+        <div class="history-controls-bar">
+          <div class="term-prompt-line">
+            <span class="prompt-user">root@core</span><span class="prompt-sep">:</span><span class="prompt-path">/var/log</span><span class="prompt-char">$</span>
+            <span class="prompt-cmd">cat search_history.json | audit --show-extracted-counts</span>
+          </div>
+        </div>
+        <div class="history-list" id="search-history-list">
+          <div class="history-empty">[EMPTY_LOG] No search queries recorded yet. Execute a search to record query telemetry.</div>
+        </div>
       </div>
     </section>
 
-    <!-- Main Grid Layout -->
-    <main class="main-grid">
-      <!-- Left Panel: Input & Settings -->
-      <section class="card input-card">
-        <div class="card-header">
-          <div class="header-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="2" y1="12" x2="22" y2="12"></line>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-            </svg>
+    <!-- ═══ HISTORY / ARCHIVE SLIDE DRAWER ═══ -->
+    <section class="terminal-window history-window" id="history-panel" style="display:none">
+      <div class="term-titlebar">
+        <div class="term-title-left">
+          <span class="term-dot dot-red"></span>
+          <span class="term-dot dot-yellow"></span>
+          <span class="term-dot dot-green"></span>
+          <span class="term-path">archive://var/log/persistent_sessions.db</span>
+        </div>
+        <div class="term-title-right">
+          <span class="term-tag">[READ_ONLY_RECORDS]</span>
+          <button type="button" id="btn-close-history" class="term-title-btn" title="Close">[ ✕ ]</button>
+        </div>
+      </div>
+      <div class="term-window-body">
+        <div class="history-controls-bar">
+          <div class="term-prompt-line">
+            <span class="prompt-user">root@core</span><span class="prompt-sep">:</span><span class="prompt-path">/var/log</span><span class="prompt-char">$</span>
+            <span class="prompt-cmd">cat persistent_sessions.db | sort -r</span>
           </div>
-          <h2>Target Websites</h2>
+        </div>
+        <div class="history-list" id="history-list">
+          <div class="history-empty">[EMPTY_BUFFER] No archived sessions recorded. Run a query sequence to persist records.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ MODE ROUTER TABS (TERMINAL TTY SELECTOR) ═══ -->
+    <nav class="term-mode-selector">
+      <div class="term-tab-group">
+        <button type="button" class="term-tab active" id="tab-btn-gmb" data-mode="gmb">
+          <span class="tab-index">TTY-01</span>
+          <span class="tab-glyph">◈</span>
+          <span class="tab-name">GEO_SPATIAL_VECTOR_DISPATCH</span>
+          <span class="tab-badge">PRIMARY_MODULE</span>
+        </button>
+        <button type="button" class="term-tab" id="tab-btn-websites" data-mode="websites">
+          <span class="tab-index">TTY-02</span>
+          <span class="tab-glyph">◇</span>
+          <span class="tab-name">ENDPOINT_URI_PROBE_STREAM</span>
+          <span class="tab-badge secondary">INSPECTOR</span>
+        </button>
+      </div>
+      <div class="term-mode-meta">
+        <span class="term-blink-dot">●</span>
+        <span class="term-meta-text">DISPATCH_THREAD: ACTIVE_IDLE</span>
+      </div>
+    </nav>
+
+    <!-- ═══ MAIN DUAL-TERMINAL SPLIT GRID ═══ -->
+    <main class="term-main-grid">
+
+      <!-- ════════════════════════════════════════════════════════
+           LEFT TERMINAL WINDOW: INPUT & PARAMETER DISPATCHER
+      ═════════════════════════════════════════════════════════ -->
+      <section class="terminal-window window-dispatcher">
+        <div class="term-titlebar">
+          <div class="term-title-left">
+            <span class="term-dot dot-red"></span>
+            <span class="term-dot dot-yellow"></span>
+            <span class="term-dot dot-green"></span>
+            <span class="term-path">┌─[ bash: root@sys-core:~/dispatch_vectors.sh ]</span>
+          </div>
+          <div class="term-title-right">
+            <span class="term-sys-stats">[THRD: 04] [MEM: 32MB]</span>
+            <span class="term-window-ctrls">[ &minus; ] [ &#9633; ] [ &times; ]</span>
+          </div>
         </div>
 
-        <form id="extraction-form">
-          <!-- Textarea for URLs -->
-          <div class="form-group">
-            <div class="label-row">
-              <label for="urls-input">Website URLs (One per line)</label>
-              <button type="button" id="btn-load-sample" class="text-btn">Load Demo URLs</button>
-            </div>
-            <textarea 
-              id="urls-input" 
-              name="urls_text" 
-              placeholder="https://example.com&#10;https://company.org&#10;domain.io" 
-              rows="6"
-            ></textarea>
-          </div>
+        <div class="term-window-body">
 
-          <!-- File Upload Zone -->
-          <div class="form-group">
-            <label>Or Upload File (.txt, .csv, .xlsx, .xls)</label>
-            <div class="drop-zone" id="drop-zone">
-              <input type="file" id="file-input" name="file" accept=".txt,.csv,.xlsx,.xls" hidden>
-              <!-- Hidden field to carry selected column name -->
-              <input type="hidden" id="url-column-input" name="url_column" value="">
-              <div class="drop-zone-content">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="17 8 12 3 7 8"></polyline>
-                  <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-                <p id="drop-zone-label"><span class="highlight">Click to browse</span> or drag &amp; drop list file</p>
-                <span class="file-hint">Supported: TXT, CSV, XLS, or Excel (.xlsx)</span>
+          <!-- ─── SUB-MODE 1: GEO-SPATIAL MAPS VECTOR FORM ─── -->
+          <div id="panel-gmb-mode" class="submode-panel">
+            <div class="term-sub-banner">
+              <span class="term-prompt-prefix">>_ INITIALIZE_VECTOR_QUERY:</span>
+              <span class="term-dim">Configure query vector and geo sector parameters below</span>
+            </div>
+
+            <form id="gmb-form" class="term-form">
+              <!-- Parameter 1: Class Vector (Niche) -->
+              <div class="term-form-group">
+                <div class="term-label-row">
+                  <label for="gmb-niche-input" class="term-label">
+                    <span class="param-tag">[PARAM_01]</span>
+                    <span class="param-name">TARGET_VECTOR // CLASS_SPECIFIER</span>
+                    <span class="required-flag">*REQ</span>
+                  </label>
+                  <span class="param-sub">Target industry classification</span>
+                </div>
+
+                <div class="term-input-wrap">
+                  <span class="input-prompt-glyph">&gt;</span>
+                  <input 
+                    type="text" 
+                    id="gmb-niche-input" 
+                    name="niche" 
+                    class="term-input"
+                    placeholder="e.g. Dentists, Roofing Contractors, Plumbers, HVAC, Real Estate" 
+                    autocomplete="off"
+                    required
+                  >
+                </div>
+
+                <div class="term-quick-flags" id="niche-suggestions">
+                  <span class="quick-prefix">PRESETS:</span>
+                  <button type="button" class="tag-pill term-flag-btn" data-target="gmb-niche-input" data-val="Roofing Contractors">--roofing</button>
+                  <button type="button" class="tag-pill term-flag-btn" data-target="gmb-niche-input" data-val="Dentists">--dentists</button>
+                  <button type="button" class="tag-pill term-flag-btn" data-target="gmb-niche-input" data-val="HVAC Services">--hvac</button>
+                  <button type="button" class="tag-pill term-flag-btn" data-target="gmb-niche-input" data-val="Plumbing Services">--plumbing</button>
+                  <button type="button" class="tag-pill term-flag-btn" data-target="gmb-niche-input" data-val="Real Estate Agency">--real_estate</button>
+                  <button type="button" class="tag-pill term-flag-btn" data-target="gmb-niche-input" data-val="Car Detailing">--auto_detailing</button>
+                </div>
               </div>
-            </div>
-            <!-- Selected column indicator -->
-            <div class="col-selected-indicator" id="col-selected-indicator" style="display:none">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-              URL Column: <strong id="col-selected-name"></strong>
-              <button type="button" id="btn-reselect-col" class="text-btn" style="margin-left:8px">Change</button>
-            </div>
-          </div>
 
-          <!-- Crawl Depth & Concurrency Config -->
-          <div class="settings-grid">
-            <div class="setting-item">
-              <label for="max-pages-input">
-                Max Pages / Site
-                <span class="tooltip" title="How many internal pages the bot traverses per domain (Contact, About, Team, etc.)">?</span>
-              </label>
-              <div class="input-slider-wrap">
-                <input type="number" id="max-pages-input" name="max_pages" min="1" max="100" value="25">
+              <!-- Parameter 2: Spatial Sector (Location) -->
+              <div class="term-form-group">
+                <div class="term-label-row">
+                  <label for="gmb-location-input" class="term-label">
+                    <span class="param-tag">[PARAM_02]</span>
+                    <span class="param-name">SPATIAL_SECTOR // GEO_BOUNDARY</span>
+                    <span class="required-flag">*REQ</span>
+                  </label>
+                  <span class="param-sub">Metropolitan sector or region</span>
+                </div>
+
+                <div class="term-input-wrap">
+                  <span class="input-prompt-glyph">&gt;</span>
+                  <input 
+                    type="text" 
+                    id="gmb-location-input" 
+                    name="location" 
+                    class="term-input"
+                    placeholder="e.g. Dallas, TX or Miami, FL or California" 
+                    autocomplete="off"
+                    required
+                  >
+                </div>
+
+                <div class="term-quick-flags" id="location-suggestions">
+                  <span class="quick-prefix">PRESETS:</span>
+                  <button type="button" class="tag-pill term-flag-btn" data-target="gmb-location-input" data-val="Dallas, TX">--dallas_tx</button>
+                  <button type="button" class="tag-pill term-flag-btn" data-target="gmb-location-input" data-val="Austin, TX">--austin_tx</button>
+                  <button type="button" class="tag-pill term-flag-btn" data-target="gmb-location-input" data-val="Miami, FL">--miami_fl</button>
+                  <button type="button" class="tag-pill term-flag-btn" data-target="gmb-location-input" data-val="Chicago, IL">--chicago_il</button>
+                  <button type="button" class="tag-pill term-flag-btn" data-target="gmb-location-input" data-val="Los Angeles, CA">--los_angeles</button>
+                  <button type="button" class="tag-pill term-flag-btn" data-target="gmb-location-input" data-val="Houston, TX">--houston_tx</button>
+                </div>
               </div>
-            </div>
 
-            <div class="setting-item">
-              <label for="concurrency-input">
-                Parallel Workers
-                <span class="tooltip" title="How many websites to crawl concurrently">?</span>
-              </label>
-              <div class="input-slider-wrap">
-                <input type="number" id="concurrency-input" name="concurrency" min="1" max="10" value="4">
+              <!-- Configuration Matrix -->
+              <div class="term-config-row">
+                <div class="term-config-cell">
+                  <label for="gmb-max-results" class="term-label">
+                    <span class="param-tag">[CFG_01]</span> BUFFER_CAP // MAX_ENTRIES
+                  </label>
+                  <div class="term-input-wrap num-wrap">
+                    <span class="input-prompt-glyph">#</span>
+                    <input type="number" id="gmb-max-results" name="max_results" class="term-input" min="5" max="1500" value="100">
+                  </div>
+                </div>
+
+                <div class="term-config-cell toggle-cell">
+                  <label class="term-checkbox-label" title="Multi-zone directional sweep to bypass single-sector cap">
+                    <input type="checkbox" id="gmb-exhaustive" name="exhaustive_mode">
+                    <span class="term-chk-box"></span>
+                    <div class="term-chk-body">
+                      <span class="term-chk-title">OMNI_RECURSION // EXHAUSTIVE_SWEEP</span>
+                      <span class="term-chk-sub">Bypass single sector constraint for ALL</span>
+                    </div>
+                  </label>
+                </div>
               </div>
-            </div>
+
+              <!-- Deep Inspection Toggle (Optional) -->
+              <div class="term-feature-box">
+                <label class="term-checkbox-label">
+                  <input type="checkbox" id="gmb-enrich" name="enrich_emails">
+                  <span class="term-chk-box"></span>
+                  <div class="term-chk-body">
+                    <div class="term-chk-title">
+                      <span class="term-accent-cyan">⚡ DEEP_PACKET_INSPECTION // AUTO_RESOLVE_IDENTITY (OPTIONAL)</span>
+                      <span class="term-badge-tag">[OPTIONAL]</span>
+                    </div>
+                    <span class="term-chk-sub">Disabled by default for rapid profile harvesting. Check to auto-crawl websites during sweep.</span>
+                  </div>
+                </label>
+              </div>
+
+              <!-- Command Execution Bar -->
+              <div class="term-exec-bar">
+                <button type="submit" id="btn-gmb-start" class="term-btn term-btn-execute">
+                  <span class="btn-glyph">▶</span>
+                  <span class="btn-text">INITIALIZE_DISPATCH_SEQUENCE</span>
+                </button>
+                <button type="button" id="btn-gmb-cancel" class="term-btn term-btn-kill" style="display: none;">
+                  <span class="btn-glyph">■</span>
+                  <span class="btn-text">ABORT_THREAD_EXECUTION [SIGTERM]</span>
+                </button>
+              </div>
+            </form>
           </div>
 
-          <!-- Action Buttons -->
-          <div class="button-group">
-            <button type="submit" id="btn-start" class="btn btn-primary">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-              </svg>
-              <span>Start Extraction</span>
-            </button>
-            <button type="button" id="btn-cancel" class="btn btn-danger" style="display: none;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              </svg>
-              <span>Stop Crawl</span>
-            </button>
+          <!-- ─── SUB-MODE 2: DIRECT ENDPOINT URL STREAM FORM ─── -->
+          <div id="panel-websites-mode" class="submode-panel" style="display:none">
+            <div class="term-sub-banner">
+              <span class="term-prompt-prefix">>_ TARGET_STREAM_SPECIFICATION:</span>
+              <span class="term-dim">Buffer endpoint targets or ingest structured payload</span>
+            </div>
+
+            <form id="extraction-form" class="term-form">
+              <!-- Textarea for URLs -->
+              <div class="term-form-group">
+                <div class="term-label-row">
+                  <label for="urls-input" class="term-label">
+                    <span class="param-tag">[URI_STREAM]</span> TARGET_ENDPOINTS (One host per line)
+                  </label>
+                  <button type="button" id="btn-load-sample" class="term-link-btn">[LOAD_DEMO_NODES]</button>
+                </div>
+                <div class="term-textarea-wrap">
+                  <textarea 
+                    id="urls-input" 
+                    name="urls_text" 
+                    class="term-textarea"
+                    placeholder="https://example.com&#10;https://company.org&#10;domain.io" 
+                    rows="5"
+                  ></textarea>
+                </div>
+              </div>
+
+              <!-- File Upload Drop Zone -->
+              <div class="term-form-group">
+                <div class="term-label-row">
+                  <label class="term-label">
+                    <span class="param-tag">[INGEST_FILE]</span> STRUCTURAL_PAYLOAD (.TXT, .CSV, .XLSX, .XLS)
+                  </label>
+                </div>
+
+                <div class="term-drop-zone" id="drop-zone">
+                  <input type="file" id="file-input" name="file" accept=".txt,.csv,.xlsx,.xls" hidden>
+                  <input type="hidden" id="url-column-input" name="url_column" value="">
+                  <div class="term-drop-content">
+                    <span class="term-drop-icon">⇪</span>
+                    <p id="drop-zone-label" class="term-drop-text">
+                      <span class="term-accent-cyan">[CLICK_TO_ATTACH]</span> or drag &amp; drop data matrix payload
+                    </p>
+                    <span class="term-drop-meta">SUPPORTED_FORMATS: .TXT, .CSV, .XLSX, .XLS</span>
+                  </div>
+                </div>
+
+                <div class="term-col-bound" id="col-selected-indicator" style="display:none">
+                  <span class="term-accent-green">✓ BOUND_COLUMN:</span>
+                  <strong id="col-selected-name" class="col-highlight"></strong>
+                  <button type="button" id="btn-reselect-col" class="term-link-btn">[CHANGE_BINDING]</button>
+                </div>
+              </div>
+
+              <!-- Hop Depth & Concurrency Config -->
+              <div class="term-config-row">
+                <div class="term-config-cell">
+                  <label for="max-pages-input" class="term-label">
+                    <span class="param-tag">[CFG_01]</span> MAX_HOP_DEPTH // DOMAIN_PAGE_CAP
+                  </label>
+                  <div class="term-input-wrap num-wrap">
+                    <span class="input-prompt-glyph">#</span>
+                    <input type="number" id="max-pages-input" name="max_pages" class="term-input" min="1" max="100" value="25">
+                  </div>
+                </div>
+
+                <div class="term-config-cell">
+                  <label for="concurrency-input" class="term-label">
+                    <span class="param-tag">[CFG_02]</span> CONCURRENCY_THREADS // WORKER_POOL
+                  </label>
+                  <div class="term-input-wrap num-wrap">
+                    <span class="input-prompt-glyph">#</span>
+                    <input type="number" id="concurrency-input" name="concurrency" class="term-input" min="1" max="10" value="4">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="term-exec-bar">
+                <button type="submit" id="btn-start" class="term-btn term-btn-execute">
+                  <span class="btn-glyph">▶</span>
+                  <span class="btn-text">INITIATE_PROBE_SEQUENCE</span>
+                </button>
+                <button type="button" id="btn-cancel" class="term-btn term-btn-kill" style="display: none;">
+                  <span class="btn-glyph">■</span>
+                  <span class="btn-text">ABORT_STREAM_CRAWL [SIGINT]</span>
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
+
+        </div>
       </section>
 
-      <!-- Right Panel: Live Stats & Real-Time Monitor -->
-      <section class="card monitor-card">
-        <div class="card-header">
-          <div class="header-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-            </svg>
-          </div>
-          <h2>Live Extraction Analytics</h2>
-        </div>
 
-        <!-- Metrics Cards -->
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <div class="metric-title">Emails Discovered</div>
-            <div class="metric-value accent-green" id="stat-emails">0</div>
-            <div class="metric-sub">Primary &amp; Additional</div>
-          </div>
+      <!-- ════════════════════════════════════════════════════════
+           RIGHT COLUMN: 
+           1. SEPARATE TERMINAL FOR COUNTERS / METRICS
+           2. SEPARATE TERMINAL BELOW FOR LIVE LOG RUNTIME
+      ═════════════════════════════════════════════════════════ -->
+      <div class="term-right-stack">
 
-          <div class="metric-card">
-            <div class="metric-title">Sites Processed</div>
-            <div class="metric-value" id="stat-sites">0 / 0</div>
-            <div class="metric-sub" id="stat-sites-percent">0% Completed</div>
-          </div>
-
-          <div class="metric-card">
-            <div class="metric-title">Pages Scanned</div>
-            <div class="metric-value accent-cyan" id="stat-pages">0</div>
-            <div class="metric-sub">Internal DOM pages</div>
-          </div>
-        </div>
-
-        <!-- Progress Bar -->
-        <div class="progress-section">
-          <div class="progress-bar-wrap">
-            <div class="progress-bar-fill" id="progress-bar-fill" style="width: 0%;"></div>
-          </div>
-          <div class="progress-status-text" id="progress-status-text">Ready for your URL list...</div>
-        </div>
-
-        <!-- Real-time Live Log Feed -->
-        <div class="terminal-container">
-          <div class="terminal-bar">
-            <div class="terminal-dots">
-              <span></span><span></span><span></span>
+        <!-- ─── TERMINAL WINDOW 2: TELEMETRY COUNTER CONSOLE ─── -->
+        <section class="terminal-window window-telemetry">
+          <div class="term-titlebar">
+            <div class="term-title-left">
+              <span class="term-dot dot-red"></span>
+              <span class="term-dot dot-yellow"></span>
+              <span class="term-dot dot-green"></span>
+              <span class="term-path">┌─[ top: /proc/sys/telemetry_monitor ]</span>
             </div>
-            <div class="terminal-title">Active Spider Console</div>
-            <button type="button" id="btn-clear-log" class="terminal-clear">Clear</button>
+            <div class="term-title-right">
+              <span class="term-sys-stats">[REFRESH: 500MS] [ADDR: 0x7FFE_4A]</span>
+              <span class="term-window-ctrls">[ &minus; ] [ &#9633; ] [ &times; ]</span>
+            </div>
           </div>
-          <div class="terminal-body" id="log-feed">
-            <div class="log-entry info">[SYSTEM] Extractor initialized and awaiting targets.</div>
+
+          <div class="term-window-body">
+            <!-- Metrics Cards Grid -->
+            <div class="term-metrics-grid">
+              <!-- Counter 1 -->
+              <div class="term-metric-card">
+                <div class="metric-top">
+                  <span class="metric-addr">REG_01</span>
+                  <span class="metric-title" id="metric-title-1">RESOLVED_NODES</span>
+                </div>
+                <div class="metric-value term-accent-green" id="stat-main-counter">0</div>
+                <div class="metric-sub" id="metric-sub-1">GEO_ENTITIES_PARSED</div>
+              </div>
+
+              <!-- Counter 2 -->
+              <div class="term-metric-card">
+                <div class="metric-top">
+                  <span class="metric-addr">REG_02</span>
+                  <span class="metric-title">IDENTITY_PAYLOADS</span>
+                </div>
+                <div class="metric-value term-accent-cyan" id="stat-emails">0</div>
+                <div class="metric-sub">VERIFIED_CONTACT_IDENTIFIERS</div>
+              </div>
+
+              <!-- Counter 3 -->
+              <div class="term-metric-card">
+                <div class="metric-top">
+                  <span class="metric-addr">REG_03</span>
+                  <span class="metric-title" id="metric-title-3">ACTIVE_DOMAINS</span>
+                </div>
+                <div class="metric-value term-accent-amber" id="stat-third-counter">0</div>
+                <div class="metric-sub" id="metric-sub-3">RESOLVED_URI_LINKS</div>
+              </div>
+            </div>
+
+            <!-- Terminal Progress Bar -->
+            <div class="term-progress-block">
+              <div class="progress-meta-row">
+                <span class="term-prompt-glyph">>></span>
+                <span class="progress-status-text" id="progress-status-text">DAEMON_IDLE // AWAITING_EXECUTION</span>
+              </div>
+              <div class="term-progress-track">
+                <div class="term-progress-fill" id="progress-bar-fill" style="width: 0%;"></div>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+
+        <!-- ─── TERMINAL WINDOW 3: LIVE RUNTIME STREAM CONSOLE ─── -->
+        <section class="terminal-window window-console">
+          <div class="term-titlebar">
+            <div class="term-title-left">
+              <span class="term-dot dot-red"></span>
+              <span class="term-dot dot-yellow"></span>
+              <span class="term-dot dot-green"></span>
+              <span class="term-path">┌─[ tail -f /dev/ttyS0 // RUNTIME_STREAM ]</span>
+            </div>
+            <div class="term-title-right">
+              <button type="button" id="btn-clear-log" class="term-title-btn" title="Flush Console Buffer">[ CLEAR_LOG ]</button>
+              <span class="term-window-ctrls">[ &minus; ] [ &#9633; ] [ &times; ]</span>
+            </div>
+          </div>
+
+          <div class="term-window-body console-body">
+            <div class="term-log-stream" id="log-feed">
+              <div class="log-entry info">[SYS_BOOT] Kernel initialised. Protocol dispatcher standing by on localhost:8000.</div>
+              <div class="log-entry info">[SYS_BOOT] Select target vector and spatial coordinates to launch discovery loop.</div>
+            </div>
+            <div class="term-console-prompt">
+              <span class="prompt-user">root@core</span><span class="prompt-sep">:</span><span class="prompt-path">/dev/ttyS0</span><span class="prompt-char">#</span>
+              <span class="prompt-cursor">█</span>
+            </div>
+          </div>
+        </section>
+
+      </div>
     </main>
 
-    <!-- Results Section -->
-    <section class="card results-card" id="results-section">
-      <div class="results-header">
-        <div class="results-title-group">
-          <h2>Discovered Contact Directory</h2>
-          <span class="badge" id="results-count-badge">0 Results</span>
+    <!-- ════════════════════════════════════════════════════════
+         BOTTOM TERMINAL WINDOW: DATA CACHE & RECORDS REGISTRY
+    ═════════════════════════════════════════════════════════ -->
+    <section class="terminal-window window-records" id="results-section">
+      <div class="term-titlebar">
+        <div class="term-title-left">
+          <span class="term-dot dot-red"></span>
+          <span class="term-dot dot-yellow"></span>
+          <span class="term-dot dot-green"></span>
+          <span class="term-path">┌─[ sqlite3: /dev/shm/records_cache.db // SELECT * FROM query_store ]</span>
         </div>
-
-        <div class="results-actions">
-          <div class="search-wrap">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input type="text" id="search-results-input" placeholder="Filter by email or domain...">
-          </div>
-
-          <button type="button" id="btn-export-excel" class="btn btn-export" disabled>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            <span>Excel (.xlsx)</span>
-          </button>
-
-          <button type="button" id="btn-export-xls" class="btn btn-secondary" disabled>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            <span>Legacy (.xls)</span>
-          </button>
-
-          <button type="button" id="btn-export-csv" class="btn btn-secondary" disabled>
-            <span>Export CSV</span>
-          </button>
+        <div class="term-title-right">
+          <span class="term-badge-tag" id="results-count-badge">[BUFFER: 0 RECORDS]</span>
+          <span class="term-window-ctrls">[ &minus; ] [ &#9633; ] [ &times; ]</span>
         </div>
       </div>
 
-      <!-- Table Container -->
-      <div class="table-container">
-        <table class="data-table" id="results-table">
-          <thead>
-            <tr>
-              <th>Website URL</th>
-              <th>Primary Contact Email</th>
-              <th>All Discovered Emails</th>
-              <th>Pages Scanned</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="results-tbody">
-            <tr class="empty-row">
-              <td colspan="6">No websites crawled yet. Add URLs above and click "Start Extraction".</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="term-window-body">
+        <!-- Records Query & Filter Toolbar -->
+        <div class="term-table-toolbar">
+          <div class="toolbar-left">
+            <h2 class="term-section-title" id="results-title">PERSISTENT_DATA_CACHE // GEO_NODES</h2>
+          </div>
+
+          <div class="toolbar-right">
+            <!-- Feed / Pipe Extracted URLs to Tab 2 -->
+            <button type="button" id="btn-feed-urls" class="term-btn term-btn-pipe" style="display:none;" title="Feed discovered website URLs directly into Email Extraction tab">
+              <span class="btn-glyph">➔</span>
+              <span>[PIPE_URLS_TO_EMAIL_TAB]</span>
+              <span class="pipe-cnt-badge" id="pipe-url-count">0</span>
+            </button>
+
+            <!-- Grep Search Filter -->
+            <div class="term-grep-wrap">
+              <span class="grep-tag">GREP:</span>
+              <input type="text" id="search-results-input" class="term-grep-input" placeholder="Filter by token, identifier, host, coordinate..." autocomplete="off">
+            </div>
+
+            <!-- Export Actions -->
+            <div class="term-export-group">
+              <button type="button" id="btn-export-excel" class="term-btn term-btn-export" disabled>
+                <span class="btn-glyph">⤓</span> [DUMP .XLSX]
+              </button>
+              <button type="button" id="btn-export-xls" class="term-btn term-btn-sec" disabled>
+                <span class="btn-glyph">⤓</span> [DUMP .XLS]
+              </button>
+              <button type="button" id="btn-export-csv" class="term-btn term-btn-sec" disabled>
+                <span class="btn-glyph">⤓</span> [DUMP .CSV]
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal Table Container -->
+        <div class="term-table-wrapper">
+          <table class="term-data-table" id="results-table">
+            <thead id="results-thead">
+              <!-- Rendered dynamically depending on GMB vs Website mode -->
+              <tr>
+                <th>ENTITY_IDENTIFIER</th>
+                <th>SECTOR_CLASS</th>
+                <th>COMM_LINE</th>
+                <th>IDENTITY_PAYLOAD</th>
+                <th>HOST_ENDPOINT</th>
+                <th>GEO_COORDINATES</th>
+                <th>METRIC_SCORE</th>
+                <th>SYS_REF</th>
+              </tr>
+            </thead>
+            <tbody id="results-tbody">
+              <tr class="empty-row">
+                <td colspan="8">[BUFFER_EMPTY] No records staged. Execute a query above to populate data cache.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
       </div>
     </section>
 
-    <!-- Footer -->
-    <footer class="app-footer">
-      <p>Email Extractor Pro &bull; Deep Heuristic Scanner &bull; Domain-Bounded Crawler</p>
+    <!-- Terminal Footer -->
+    <footer class="term-footer">
+      <div class="term-footer-left">
+        <span>SYS_CORE // PROTOCOL_DISPATCHER</span> &bull; <span>GEO_SPATIAL TELEMETRY</span> &bull; <span>MULTI_HOP RECON</span>
+      </div>
+      <div class="term-footer-right">
+        <span>SECURITY_LEVEL: AIRGAP</span> &bull; <span>SHA256: 9E107D9D3F</span>
+      </div>
     </footer>
+
   </div>
 
   <script src="/static/app.js"></script>

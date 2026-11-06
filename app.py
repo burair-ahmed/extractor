@@ -8,6 +8,8 @@ import asyncio
 import io
 import json
 import os
+import sys
+import threading
 import uuid
 import datetime
 from typing import Dict, List, Optional, Any
@@ -18,7 +20,11 @@ from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 
 from crawler import DomainCrawler, WebsiteResult, normalize_root_url
-from exporter import export_results_to_excel, export_results_to_csv, export_results_to_xls
+from exporter import (
+    export_results_to_excel, export_results_to_csv, export_results_to_xls,
+    export_gmb_to_excel, export_gmb_to_csv, export_gmb_to_xls
+)
+from gmb_scraper import GMBExtractor, run_gmb_in_thread
 
 app = FastAPI(title="Email Extractor Pro", version="2.0.0")
 
@@ -107,10 +113,146 @@ def _save_task_to_history(task: "ExtractionTask"):
     _save_history_index(index)
 
 
+def _save_gmb_task_to_history(task: "GMBExtractionTask"):
+    """Persist completed GMB task results to disk in XLSX, XLS, CSV and JSON, then update index."""
+    if not task.results:
+        return
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    base_name = f"gmb_{task.task_id}_{timestamp}"
+
+    # 1. Save Modern Excel (.xlsx)
+    xlsx_bytes = export_gmb_to_excel(task.results)
+    xlsx_path = os.path.join(HISTORY_DIR, base_name + ".xlsx")
+    with open(xlsx_path, "wb") as f:
+        f.write(xlsx_bytes)
+
+    # 2. Save Legacy Excel (.xls)
+    try:
+        xls_bytes = export_gmb_to_xls(task.results)
+        xls_path = os.path.join(HISTORY_DIR, base_name + ".xls")
+        with open(xls_path, "wb") as f:
+            f.write(xls_bytes)
+        xls_file = base_name + ".xls"
+    except Exception:
+        xls_file = ""
+
+    # 3. Save CSV (.csv)
+    csv_data = export_gmb_to_csv(task.results)
+    csv_path = os.path.join(HISTORY_DIR, base_name + ".csv")
+    with open(csv_path, "w", encoding="utf-8") as f:
+        f.write(csv_data)
+
+    # 4. Save Raw JSON for instant reloading into UI
+    json_path = os.path.join(HISTORY_DIR, base_name + ".json")
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(task.results, f, indent=2, ensure_ascii=False)
+
+    index = _load_history_index()
+    index.insert(0, {
+        "task_id": task.task_id,
+        "task_type": "gmb",
+        "timestamp": datetime.datetime.now().isoformat(),
+        "timestamp_display": datetime.datetime.now().strftime("%b %d, %Y %H:%M"),
+        "niche": task.niche,
+        "location": task.location,
+        "total_profiles": len(task.results),
+        "total_emails": task.total_emails_found,
+        "status": task.status,
+        "xlsx_file": base_name + ".xlsx",
+        "xls_file": xls_file,
+        "csv_file": base_name + ".csv",
+        "json_file": base_name + ".json",
+    })
+    index = index[:50]
+    _save_history_index(index)
+
+
+SEARCH_HISTORY_FILE = os.path.join(HISTORY_DIR, "search_history.json")
+
+
+def _load_search_history() -> List[Dict]:
+    if os.path.exists(SEARCH_HISTORY_FILE):
+        try:
+            with open(SEARCH_HISTORY_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
+
+    # Initialize from index.json if exists
+    index_entries = _load_history_index()
+    history = []
+    for entry in index_entries:
+        is_gmb = entry.get("task_type") == "gmb" or bool(entry.get("niche"))
+        niche = entry.get("niche", "")
+        loc = entry.get("location", "")
+        if is_gmb:
+            query = f"{niche} in {loc}" if (niche and loc) else (niche or loc or "GMB Search")
+            count = entry.get("total_profiles", 0)
+        else:
+            urls = entry.get("urls_sample", [])
+            total_sites = entry.get("total_sites", len(urls))
+            query = f"Batch of {total_sites} target host(s)"
+            count = entry.get("completed_sites", total_sites)
+
+        history.append({
+            "task_id": entry.get("task_id", ""),
+            "search_type": "gmb" if is_gmb else "websites",
+            "query": query,
+            "niche": niche,
+            "location": loc,
+            "results_count": count,
+            "emails_count": entry.get("total_emails", 0),
+            "status": entry.get("status", "Completed"),
+            "timestamp": entry.get("timestamp", ""),
+            "timestamp_display": entry.get("timestamp_display", ""),
+        })
+    _save_search_history(history)
+    return history
+
+
+def _save_search_history(history: List[Dict]):
+    with open(SEARCH_HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(history, f, indent=2, ensure_ascii=False)
+
+
+def record_search_start(task_id: str, search_type: str, query: str, niche: str = "", location: str = "", total_targets: int = 0):
+    history = _load_search_history()
+    entry = {
+        "task_id": task_id,
+        "search_type": search_type,
+        "query": query,
+        "niche": niche,
+        "location": location,
+        "total_targets": total_targets,
+        "results_count": 0,
+        "emails_count": 0,
+        "status": "Running",
+        "timestamp": datetime.datetime.now().isoformat(),
+        "timestamp_display": datetime.datetime.now().strftime("%b %d, %Y %H:%M"),
+    }
+    history.insert(0, entry)
+    _save_search_history(history[:100])
+
+
+def update_search_entry(task_id: str, results_count: Optional[int] = None, emails_count: Optional[int] = None, status: Optional[str] = None):
+    history = _load_search_history()
+    for entry in history:
+        if entry.get("task_id") == task_id:
+            if results_count is not None:
+                entry["results_count"] = results_count
+            if emails_count is not None:
+                entry["emails_count"] = emails_count
+            if status is not None:
+                entry["status"] = status
+            _save_search_history(history)
+            break
+
 
 class ExtractionTask:
     def __init__(self, task_id: str, urls: List[str], max_pages: int, concurrency: int, timeout: float):
         self.task_id = task_id
+        self.task_type = "email"
         self.urls = [u for u in [normalize_root_url(x) for x in urls] if u]
         self.max_pages = max_pages
         self.concurrency = concurrency
@@ -135,7 +277,44 @@ class ExtractionTask:
             c.cancel()
 
 
-TASKS: Dict[str, ExtractionTask] = {}
+class GMBExtractionTask:
+    def __init__(
+        self,
+        task_id: str,
+        niche: str,
+        location: str,
+        max_results: int = 200,
+        exhaustive: bool = False,
+        enrich_emails: bool = True
+    ):
+        self.task_id = task_id
+        self.task_type = "gmb"
+        self.niche = niche
+        self.location = location
+        self.max_results = max_results
+        self.exhaustive = exhaustive
+        self.enrich_emails = enrich_emails
+        self.status = "Pending"
+        self.results: List[Dict[str, Any]] = []
+        self.total_profiles_found = 0
+        self.total_emails_found = 0
+        self.event_queue: asyncio.Queue = asyncio.Queue()
+        self.cancel_event = asyncio.Event()
+        self.cancel_thread_event = threading.Event()
+        self.is_cancelled = False
+        self.extractor: Optional[GMBExtractor] = None
+
+    async def emit_event(self, data: Dict[str, Any]):
+        await self.event_queue.put(data)
+
+    def cancel(self):
+        self.is_cancelled = True
+        self.status = "Cancelled"
+        self.cancel_event.set()
+        self.cancel_thread_event.set()
+
+
+TASKS: Dict[str, Any] = {}
 
 
 async def run_crawler_task(task: ExtractionTask):
@@ -178,6 +357,7 @@ async def run_crawler_task(task: ExtractionTask):
             task.completed_sites += 1
             task.total_emails_found += len(site_res.all_emails)
             task.total_pages_scanned += site_res.pages_scanned
+            update_search_entry(task.task_id, results_count=task.completed_sites, emails_count=task.total_emails_found)
 
             await task.emit_event({
                 "type": "site_done",
@@ -202,12 +382,87 @@ async def run_crawler_task(task: ExtractionTask):
                 "message": f"Extraction completed! Found {task.total_emails_found} emails across {task.completed_sites} websites."
             })
             _save_task_to_history(task)
+            update_search_entry(task.task_id, results_count=task.completed_sites, emails_count=task.total_emails_found, status="Completed")
+        else:
+            _save_task_to_history(task)
+            update_search_entry(task.task_id, results_count=task.completed_sites, emails_count=task.total_emails_found, status="Cancelled")
 
     except Exception as e:
         task.status = "Failed"
+        update_search_entry(task.task_id, results_count=task.completed_sites, emails_count=task.total_emails_found, status="Failed")
         await task.emit_event({
             "type": "task_error",
             "message": f"Fatal extraction error: {str(e)}"
+        })
+
+
+async def run_gmb_task(task: GMBExtractionTask):
+    task.status = "Running"
+    main_loop = asyncio.get_running_loop()
+
+    await task.emit_event({
+        "type": "gmb_start",
+        "niche": task.niche,
+        "location": task.location,
+        "max_results": task.max_results,
+        "message": f"Starting Google Maps extraction for '{task.niche}' in '{task.location}'..."
+    })
+
+    def threadsafe_emit(event_dict: Dict[str, Any]):
+        try:
+            task.event_queue.put_nowait(event_dict)
+            if event_dict.get("type") == "gmb_profile_found":
+                p = event_dict.get("profile")
+                if p:
+                    existing = next((x for x in task.results if x.get("place_id") == p.get("place_id")), None)
+                    if existing:
+                        existing.update(p)
+                    else:
+                        task.results.append(p)
+                    task.total_profiles_found = len(task.results)
+                    task.total_emails_found = sum(1 for x in task.results if x.get("primary_email"))
+                    update_search_entry(task.task_id, results_count=task.total_profiles_found, emails_count=task.total_emails_found)
+        except Exception:
+            pass
+
+    def run_worker():
+        return run_gmb_in_thread(
+            niche=task.niche,
+            location=task.location,
+            max_results=task.max_results,
+            exhaustive_mode=task.exhaustive,
+            enrich_emails=task.enrich_emails,
+            main_loop=main_loop,
+            emit_event_fn=threadsafe_emit,
+            cancel_event=task.cancel_thread_event
+        )
+
+    try:
+        profiles = await asyncio.to_thread(run_worker)
+        task.results = profiles
+        task.total_profiles_found = len(profiles)
+        task.total_emails_found = sum(1 for p in profiles if p.get("primary_email"))
+
+        if not task.is_cancelled:
+            task.status = "Completed"
+            await task.emit_event({
+                "type": "task_completed",
+                "total_profiles": task.total_profiles_found,
+                "total_emails": task.total_emails_found,
+                "message": f"Extraction completed! Captured {task.total_profiles_found} business profiles and {task.total_emails_found} contact emails."
+            })
+            _save_gmb_task_to_history(task)
+            update_search_entry(task.task_id, results_count=task.total_profiles_found, emails_count=task.total_emails_found, status="Completed")
+        else:
+            _save_gmb_task_to_history(task)
+            update_search_entry(task.task_id, results_count=task.total_profiles_found, emails_count=task.total_emails_found, status="Cancelled")
+
+    except Exception as e:
+        task.status = "Failed"
+        update_search_entry(task.task_id, results_count=task.total_profiles_found, emails_count=task.total_emails_found, status="Failed")
+        await task.emit_event({
+            "type": "task_error",
+            "message": f"Fatal GMB extraction error: {str(e)}"
         })
 
 
@@ -341,11 +596,62 @@ async def create_task(
     )
     TASKS[task_id] = task
 
+    record_search_start(
+        task_id=task_id,
+        search_type="websites",
+        query=f"Batch of {len(deduped_urls)} target host(s)",
+        total_targets=len(deduped_urls)
+    )
+
     asyncio.create_task(run_crawler_task(task))
 
     return {
         "task_id": task_id,
         "total_urls": len(deduped_urls),
+        "status": "Running"
+    }
+
+
+@app.post("/api/gmb/tasks")
+async def create_gmb_task(
+    niche: Optional[str] = Form(None),
+    location: Optional[str] = Form(None),
+    max_results: int = Form(200),
+    exhaustive_mode: bool = Form(False),
+    enrich_emails: bool = Form(False),
+):
+    niche = (niche or "").strip()
+    location = (location or "").strip()
+    if not niche or not location:
+        raise HTTPException(status_code=400, detail="Both Niche and City/Location are required.")
+
+    task_id = str(uuid.uuid4())[:8]
+    task = GMBExtractionTask(
+        task_id=task_id,
+        niche=niche,
+        location=location,
+        max_results=max_results,
+        exhaustive=exhaustive_mode,
+        enrich_emails=enrich_emails
+    )
+    TASKS[task_id] = task
+
+    record_search_start(
+        task_id=task_id,
+        search_type="gmb",
+        query=f"{niche} in {location}",
+        niche=niche,
+        location=location,
+        total_targets=max_results
+    )
+
+    asyncio.create_task(run_gmb_task(task))
+
+    return {
+        "task_id": task_id,
+        "niche": niche,
+        "location": location,
+        "max_results": max_results,
         "status": "Running"
     }
 
@@ -357,12 +663,14 @@ async def stream_task_events(task_id: str):
         raise HTTPException(status_code=404, detail="Task not found")
 
     async def event_generator():
+        task_type = getattr(task, "task_type", "email")
         initial_data = {
             "type": "init",
-            "total_sites": task.total_sites,
-            "completed_sites": task.completed_sites,
+            "task_type": task_type,
+            "total_sites": getattr(task, "total_sites", getattr(task, "max_results", 0)),
+            "completed_sites": getattr(task, "completed_sites", getattr(task, "total_profiles_found", 0)),
             "total_emails": task.total_emails_found,
-            "total_pages": task.total_pages_scanned,
+            "total_pages": getattr(task, "total_pages_scanned", 0),
             "status": task.status,
             "existing_results": task.results
         }
@@ -388,13 +696,15 @@ async def get_task_results(task_id: str):
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
+    task_type = getattr(task, "task_type", "email")
     return {
         "task_id": task.task_id,
+        "task_type": task_type,
         "status": task.status,
-        "total_sites": task.total_sites,
-        "completed_sites": task.completed_sites,
+        "total_sites": getattr(task, "total_sites", getattr(task, "total_profiles_found", 0)),
+        "completed_sites": getattr(task, "completed_sites", getattr(task, "total_profiles_found", 0)),
         "total_emails": task.total_emails_found,
-        "total_pages": task.total_pages_scanned,
+        "total_pages": getattr(task, "total_pages_scanned", 0),
         "results": task.results,
     }
 
@@ -405,8 +715,13 @@ async def export_excel(task_id: str):
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    excel_bytes = export_results_to_excel(task.results)
-    filename = f"extracted_emails_{task_id}.xlsx"
+    if getattr(task, "task_type", "email") == "gmb":
+        excel_bytes = export_gmb_to_excel(task.results)
+        filename = f"gmb_leads_{task_id}.xlsx"
+    else:
+        excel_bytes = export_results_to_excel(task.results)
+        filename = f"extracted_emails_{task_id}.xlsx"
+
     return Response(
         content=excel_bytes,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -420,8 +735,13 @@ async def export_xls(task_id: str):
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    xls_bytes = export_results_to_xls(task.results)
-    filename = f"extracted_emails_{task_id}.xls"
+    if getattr(task, "task_type", "email") == "gmb":
+        xls_bytes = export_gmb_to_xls(task.results)
+        filename = f"gmb_leads_{task_id}.xls"
+    else:
+        xls_bytes = export_results_to_xls(task.results)
+        filename = f"extracted_emails_{task_id}.xls"
+
     return Response(
         content=xls_bytes,
         media_type="application/vnd.ms-excel",
@@ -435,8 +755,13 @@ async def export_csv(task_id: str):
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    csv_data = export_results_to_csv(task.results)
-    filename = f"extracted_emails_{task_id}.csv"
+    if getattr(task, "task_type", "email") == "gmb":
+        csv_data = export_gmb_to_csv(task.results)
+        filename = f"gmb_leads_{task_id}.csv"
+    else:
+        csv_data = export_results_to_csv(task.results)
+        filename = f"extracted_emails_{task_id}.csv"
+
     return Response(
         content=csv_data,
         media_type="text/csv",
@@ -451,7 +776,41 @@ async def cancel_task(task_id: str):
         raise HTTPException(status_code=404, detail="Task not found")
 
     task.cancel()
+    if task.results:
+        if getattr(task, "task_type", "") == "gmb":
+            _save_gmb_task_to_history(task)
+        else:
+            _save_task_to_history(task)
+
+    update_search_entry(
+        task_id,
+        results_count=len(task.results) if getattr(task, "task_type", "") == "gmb" else getattr(task, "completed_sites", 0),
+        emails_count=getattr(task, "total_emails_found", 0),
+        status="Cancelled"
+    )
     return {"task_id": task_id, "status": "Cancelled"}
+
+
+@app.get("/api/search-history")
+async def get_search_history():
+    """Returns the persistent log of all searches with extracted result quantities."""
+    return {"searches": _load_search_history()}
+
+
+@app.delete("/api/search-history/{task_id}")
+async def delete_search_history_entry(task_id: str):
+    """Deletes a specific search history entry from persistent disk storage."""
+    history = _load_search_history()
+    history = [h for h in history if h.get("task_id") != task_id]
+    _save_search_history(history)
+    return {"status": "deleted", "task_id": task_id}
+
+
+@app.delete("/api/search-history")
+async def clear_all_search_history():
+    """Purges all search history entries."""
+    _save_search_history([])
+    return {"status": "cleared"}
 
 
 @app.get("/api/history")
